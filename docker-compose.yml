@@ -1,0 +1,67 @@
+# Umami (self-hosted Web-Analytics) hinter Caddy mit automatischem HTTPS.
+# Nur Caddy öffnet Ports nach außen — Umami und Postgres bleiben im internen Docker-Netz.
+# Konfiguration kommt aus der .env (siehe .env.example).
+
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:latest
+    init: true
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://umami:${DB_PASSWORD}@db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${APP_SECRET}
+      # Optional: 2FA-Verschlüsselung (openssl rand -hex 32). Leer = 2FA nicht nutzbar.
+      TWO_FACTOR_ENCRYPTION_KEY: ${TWO_FACTOR_ENCRYPTION_KEY:-}
+      # Optional: neutraler Name für das Tracker-Script gegen Adblocker,
+      # z. B. "stats" → https://<domain>/stats.js. Leer = Standard "script.js".
+      TRACKER_SCRIPT_NAME: ${TRACKER_SCRIPT_NAME:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/heartbeat || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - umami-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    # Einzige Stelle, an der Ports nach außen gehen (443/udp = HTTP/3).
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      UMAMI_DOMAIN: ${UMAMI_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # /data enthält die TLS-Zertifikate — muss persistent sein,
+      # sonst holt Caddy bei jedem Neustart neue Zertifikate (Rate-Limits!).
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      umami:
+        condition: service_healthy
+
+volumes:
+  umami-db-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,6 @@
+# Domain kommt aus der .env (UMAMI_DOMAIN) — Caddy holt automatisch
+# ein Let's-Encrypt-Zertifikat, sobald der DNS-Eintrag stimmt.
+{$UMAMI_DOMAIN} {
+	encode gzip
+	reverse_proxy umami:3000
+}
