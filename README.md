@@ -70,7 +70,7 @@ cd umami-analytics
 
 cp .env.example .env
 # Secrets erzeugen und in .env eintragen:
-openssl rand -base64 32   # → DB_PASSWORD
+openssl rand -hex 32      # → DB_PASSWORD (hex, NICHT base64 — landet in der DATABASE_URL)
 openssl rand -base64 32   # → APP_SECRET
 openssl rand -hex 32      # → TWO_FACTOR_ENCRYPTION_KEY (optional, für 2FA)
 
