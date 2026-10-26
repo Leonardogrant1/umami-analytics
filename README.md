@@ -96,7 +96,7 @@ einloggen:
    `.env` gesetzten `TRACKER_SCRIPT_NAME=stats` sieht er so aus:
 
 ```html
-<script defer src="https://analytics.leonardogranetto.com/stats.js"
+<script defer src="https://analytics.leonardogranetto.com/stats"
         data-website-id="DEINE-WEBSITE-ID"></script>
 ```
 
@@ -178,7 +178,7 @@ JEMP-Link weiterreichen.
 <head>
   <!-- Umami-Tracking (zählt automatisch Seitenaufrufe inkl. Query-String,
        d. h. ?ref=ig taucht in Umami direkt als eigene URL auf) -->
-  <script defer src="https://analytics.leonardogranetto.com/stats.js"
+  <script defer src="https://analytics.leonardogranetto.com/stats"
           data-website-id="DEINE-WEBSITE-ID"></script>
 </head>
 <body>
